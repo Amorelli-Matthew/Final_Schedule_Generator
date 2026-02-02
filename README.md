@@ -13,7 +13,7 @@ A Python-based web scraper that extracts a UNR student's course schedule from a 
 ## Prerequisites
 
 ### Python Version
-- Python 3.8 or higher
+- Python 3.14 or higher
 
 ### Required Python Libraries
 - Built in: csv re
@@ -23,19 +23,21 @@ A Python-based web scraper that extracts a UNR student's course schedule from a 
 
 ### To Run
 ```
-python3 ./final_schedule.py classSchedule.pdf
+python3 ./final_schedule.py myclasses.pdf
 ```
 #### Note:
-classSchedule can be any other MyNevada class Schedule PDF file
+myclasses can be any other MyNevada class Schedule PDF file
 
-#Example Console Output
+
+
+# Example Console Output
 ```
 UNR Finals Schedule Generator
 ==============================
 Finals Schedule saved to 'finals_schedule.csv'
 ```
 
-## Example final_schedule.csv
+## Example finals_schedule.csv
 ```
 Course,Final_Day,Final_Time
 Prog Lang Conc Implmnt,Tuesday,10:15 a.m.-12:15 p.m.
