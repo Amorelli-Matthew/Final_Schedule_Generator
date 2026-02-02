@@ -1,5 +1,4 @@
-### Prerequisites
-- # UNR Finals Schedule Generator
+# UNR Finals Schedule Generator
 
 ## Description
 A Python-based web scraper that extracts a UNR student's course schedule from a PDF file and matches it against the University of Nevada, Reno's official finals schedule webpage. The program programmatically generates a personalized finals schedule for the semester and saves the results to a CSV file.
