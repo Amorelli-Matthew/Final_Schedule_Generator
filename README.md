@@ -16,12 +16,10 @@ A Python-based web scraper that extracts a UNR student's course schedule from a 
 - Python 3.8 or higher
 
 ### Required Python Libraries
-####Built in:
-csv re
+- Built in: csv re
 
 #### Install the following packages using pip:
-
-pip install requests beautifulsoup4 pypdf
+- pip install requests beautifulsoup4 pypdf
 
 ### To Run
 
