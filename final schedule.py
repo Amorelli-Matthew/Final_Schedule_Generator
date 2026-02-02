@@ -5,15 +5,20 @@ import pypdf #Used for reading from a pdf file
 import re #Used for reg edit expressions
 import csv
 
-DAY_MAP = {
-    "Monday": "M",
-    "Tuesday": "T",
-    "Wednesday": "W",
-    "Thursday": "R",
-    "Friday": "F"
-}
+#Name : Matthew Amorelli
+#Date : June 10, 2024
+#Description : This program extracts a student's course schedule from a provided
+#PDF file and matches it against the University of Nevada, Reno's finals schedule
+#webpage to determine the final exam times for each course. The results are saved
+#to a CSV file.
+
+
+# Each of these carries information about the days of the week
+# Day order for processing ranges
+# Day letter for mapping full names to letters
 
 DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+
 DAY_LETTER = {
     "Monday": "M",
     "Tuesday": "T",
@@ -23,6 +28,7 @@ DAY_LETTER = {
 }
 
 def normalize_days(days_text):
+    '''Helper that normalizes day format to match website'''
     if not days_text:
         return "N/A"
 
@@ -41,7 +47,7 @@ def normalize_days(days_text):
                 for day in DAY_ORDER[start_idx:end_idx + 1]
             )
 
-            # Compress common finals patterns
+            #Condense common patterns like a monday through friday to mwf or mwtf to mw
             if letters == "MTWRF":
                 return "MWF"
             if letters == "MTWR":
@@ -59,6 +65,9 @@ def normalize_days(days_text):
 
 
 def normalize_time(text):
+
+    '''Helper that normalizes time format to match website'''
+    
     if not text:
         return text
 
@@ -72,6 +81,7 @@ def normalize_time(text):
         text
     )
 
+    #For afternoon classes
     text = re.sub(
         r'(\d{1,2}:\d{2})\s*([AaPp])\.?\s*[Mm]\.?',
         lambda m: f"{m.group(1)} {'a.m.' if m.group(2).lower() == 'a' else 'p.m.'}",
@@ -80,21 +90,10 @@ def normalize_time(text):
 
     return text
 
-def fix_time_format(text):
-    '''Fixes class time to match website format'''
-
-    # Fix time format from 10:30AM to 10:30 a.m. 
-    text = re.sub(r'(\d+:\d+)\s*([AaPp])[Mm]', r'\1 \2.m.', text)
-    # Make AM/PM lowercase a.m./p.m.
-    text = text.replace('AM.m.', 'a.m.').replace('PM.m.', 'p.m.').replace('AM', 'a.m.').replace('PM', 'p.m.')
-    
-    #Ensure space between time and a.m./p.m.
-    text = re.sub(r'(\d+:\d+)([ap]\.m\.)', r'\1 \2', text, flags=re.IGNORECASE)
-    return text
-
-
 def extract_course_schedule(pdf_path):
+    
     '''Extracts course schedule from the mynevada PDF file'''
+
     # Read in raw text
     text = ""
     with open(pdf_path, "rb") as file:
@@ -140,7 +139,6 @@ def extract_course_schedule(pdf_path):
             if "ADEnrolled" in section or "Audit" in section:
                 continue
                 
-            # Check if enrolled
             if "Enrolled" in section:
                 # Extract Days
                 days_match = re.search(r'Days:\s*([A-Za-z\s\-to]+)', section, re.IGNORECASE)
@@ -157,7 +155,11 @@ def extract_course_schedule(pdf_path):
                 })
    
     return final_schedule
+
 def extract_tables_from_webpage(soup):
+    
+    '''Extracts finals schedule tables from the webpage soup'''
+
     tables_data = []
     for table_tag in soup.find_all("table", class_="footable"):
         caption = table_tag.find("caption")
@@ -165,7 +167,8 @@ def extract_tables_from_webpage(soup):
         # Extract day from caption
         if caption:
             day_text = caption.get_text(strip=True)
-            # Get just the day name (e.g., "Thursday" from "Thursday, First day of finals")
+
+            # Get just the day name (e.g. "Thursday" from 'Thursday, First day of finals'")
             day = day_text.split(',')[0].strip()
         else:
             day = "Unknown"
@@ -186,25 +189,8 @@ def extract_tables_from_webpage(soup):
                 if day_pattern_match:
                     day_pattern = day_pattern_match.group(1)
                 else:
-                    # Fallback: Try to determine pattern from text
-                    if 'Tuesday/Thursday' in class_days_text or 'TR' in class_days_text:
-                        day_pattern = 'TR'
-                    elif 'Monday/Wednesday/Friday' in class_days_text or 'MWF' in class_days_text:
-                        day_pattern = 'MWF'
-                    elif 'Monday/Wednesday' in class_days_text or 'MW' in class_days_text:
-                        day_pattern = 'MW'
-                    elif 'Monday' in class_days_text:
-                        day_pattern = 'M'
-                    elif 'Tuesday' in class_days_text:
-                        day_pattern = 'T'
-                    elif 'Wednesday' in class_days_text:
-                        day_pattern = 'W'
-                    elif 'Thursday' in class_days_text:
-                        day_pattern = 'R'
-                    elif 'Friday' in class_days_text:
-                        day_pattern = 'F'
-                    else:
-                        day_pattern = "Unknown"
+                    #set the pattern to unknown if not found
+                    day_pattern = "Unknown"
                 
                 rows.append({
                     "class_time": class_time,
@@ -219,50 +205,36 @@ def extract_tables_from_webpage(soup):
     return tables_data
 
 def find_final_exam_time(student_class, tables_data):
-
+    """
+    Find the final exam time for a student's class by exact matching.
+    """
     student_days = student_class['Days']
     student_time = student_class['Start_Time']
     
     for table in tables_data:
         day = table["day"]
         for row in table["rows"]:
-            # Check if day patterns match
+            # Exact day pattern match
             if row["day_pattern"] == student_days:
-                # Check if times match
-                website_time = row["class_time"]
-                
-                # Extract just the hour for comparison
-                student_hour_match = re.search(r'(\d{1,2}):', student_time)
-                website_hour_match = re.search(r'(\d{1,2}):', website_time)
-                
-                if student_hour_match and website_hour_match:
-                    student_hour = int(student_hour_match.group(1))
-                    website_hour = int(website_hour_match.group(1))
-                    
-                    # Adjust for morning or night
-                    if 'p.m.' in student_time and student_hour < 12:
-                        student_hour += 12
-                    if 'p.m.' in website_time and website_hour < 12:
-                        website_hour += 12
-                    
-                    # Check if hours match 
-                    if abs(student_hour - website_hour) <= 1:
-                        return {
-                            "Course": student_class['Course'],
-                            "Final_Day": day,
-                            "Final_Time": row["final_time"]
-                        }
+                # Exact time match (allowing for format differences)
+                if normalize_time(row["class_time"]) == student_time:
+                    return {
+                        "Course": student_class['Course'],
+                        "Final_Day": day,
+                        "Final_Time": row["final_time"],
+                    }
     
-    # If no match found
     return {
         "Course": student_class['Course'],
         "Final_Day": "Not Found",
         "Final_Time": "Not Found"
     }
 
-def write_to_csv(finals_schedule, filename="finals_schedule.csv"):
+def write_to_csv(finals_schedule):
     '''Writes the finals schedule to a CSV file'''
 
+    filename="finals_schedule.csv"
+    
     with open(filename, 'w', newline='') as csvfile:
         fieldnames = ['Course', 'Final_Day', 'Final_Time']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -271,22 +243,27 @@ def write_to_csv(finals_schedule, filename="finals_schedule.csv"):
         for exam in finals_schedule:
             writer.writerow(exam)
     
-    print(f"Finals schedule saved to '{filename}'")
+    print(f"Finals Schedule saved to '{filename}'")
 
 def main(args):
     print("UNR Finals Schedule Generator")
     print("==============================")
+
+    #url for finals page
     url = "https://www.unr.edu/admissions/records/academic-calendar/finals-schedule"
 
-    r = requests.get(url)
-    if r.status_code == requests.codes.ok:
+    # Fetch finals schedule webpage with error handling
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
         soup = BeautifulSoup(r.text, 'html.parser')
-    else:
-      print("Error fetching finals schedule")
-      return
     
+    #If an error occurs print error and exit
+    except requests.RequestException as e:
+        print(f"Error fetching finals schedule: {e}")
+        return
 
-
+    
     # Parse tables from webpage
     tables_data = extract_tables_from_webpage(soup)
 
@@ -299,9 +276,12 @@ def main(args):
     
     # Extract course schedule
     schedule = extract_course_schedule(file_path)
-    
-   
 
+    # Check to see if any valid courses were found
+    if not schedule:
+        print("No valid courses found in the provided PDF.")
+        return
+    
     # Find final exam for each course
     finals_schedule = []
     for student_class in schedule:
