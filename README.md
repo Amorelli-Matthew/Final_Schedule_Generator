@@ -25,19 +25,21 @@ A Python-based web scraper that extracts a UNR student's course schedule from a 
 
 python3 ./final_schedule.py classSchedule.pdf
 
-##  Example output
+#Example Console Output
 
+```
 UNR Finals Schedule Generator
 ==============================
 Finals Schedule saved to 'finals_schedule.csv'
+```
 
 ## Example final_schedule.csv
-
+```
 Course,Final_Day,Final_Time
 Prog Lang Conc Implmnt,Tuesday,10:15 a.m.-12:15 p.m.
 Automata & Formal Lang,Thursday,10:15 a.m.-12:15 p.m.
 Database Mgmt Systems,Monday,3-5 p.m.
 Circuits I,Friday,10:15 a.m.-12:15 p.m.
-
+```
 ## License Notice
 Licensed as GPLV3 See `LICENSE` for details Exception.
