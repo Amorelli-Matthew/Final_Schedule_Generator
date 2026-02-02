@@ -25,6 +25,8 @@ A Python-based web scraper that extracts a UNR student's course schedule from a 
 ```
 python3 ./final_schedule.py classSchedule.pdf
 ```
+#### Note:
+classSchedule can be any other MyNevada class Schedule PDF file
 
 #Example Console Output
 ```
