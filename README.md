@@ -22,11 +22,11 @@ A Python-based web scraper that extracts a UNR student's course schedule from a 
 - pip install requests beautifulsoup4 pypdf
 
 ### To Run
-
+```
 python3 ./final_schedule.py classSchedule.pdf
+```
 
 #Example Console Output
-
 ```
 UNR Finals Schedule Generator
 ==============================
